@@ -1,0 +1,14 @@
+# Built proxy (rebuild with: go build -o bin/bonsai-ollama-proxy ./cmd/bonsai-ollama-proxy)
+bin/bonsai-ollama-proxy
+
+# Local Ollama tarball experiments
+.ollama-upgrade/
+
+# Prism llama.cpp drop (~50+ MiB); download per README
+vendor/prism-llama/
+
+# Model weights (~237 MiB); download from Hugging Face
+models/**/*.gguf
+
+# Stray root binary from local go build
+/main

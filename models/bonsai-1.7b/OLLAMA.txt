@@ -1,0 +1,55 @@
+Bonsai-1.7B-Q1_0.gguf and Ollama
+================================
+
+Why stock Ollama fails
+----------------------
+The GGUF uses GGML type Q1_0 (id 41). Ollama's bundled ggml ends before that type,
+so the runner aborts with GGML_ASSERT when loading tensors. Upgrading Ollama alone
+does not fix it until they ship a build whose ggml includes Q1_0.
+
+Working setup: bonsai-ollama-proxy + Prism llama-server
+-------------------------------------------------------
+This repo includes:
+
+- vendor/prism-llama/... — PrismML llama.cpp binaries (llama-server) with Q1_0.
+- cmd/bonsai-ollama-proxy — HTTP reverse proxy on port 11434:
+  - For models whose name contains `bonsai-1.7b`, `/api/chat` and `/api/generate`
+    are served by llama-server (OpenAI-compatible API on port 9988), including
+    streaming (`stream: true`): OpenAI SSE is translated to Ollama NDJSON.
+  - All other requests go to a normal `ollama serve` on port 11435.
+
+Build the proxy:
+
+  cd cmd/bonsai-ollama-proxy && go build -o ../../bin/bonsai-ollama-proxy .
+
+Run the stack (stops listeners on 11434, 11435, 9988, then starts backend + proxy):
+
+  ./scripts/bonsai-ollama-stack.sh
+
+Then in another terminal (use a real TTY for `ollama run`):
+
+  export OLLAMA_HOST=http://127.0.0.1:11434
+  ollama run eslider/bonsai-1.7b "Say hello in one sentence."
+
+Or call the API directly:
+
+  curl -sS http://127.0.0.1:11434/api/chat \
+    -H "Content-Type: application/json" \
+    -d '{"model":"eslider/bonsai-1.7b","messages":[{"role":"user","content":"Hi"}],"stream":false}'
+
+Environment overrides (optional):
+
+  BONSAI_REPO_ROOT       — repo root (default: parent of proxy binary / ../..)
+  BONSAI_GGUF            — path to Bonsai-1.7B-Q1_0.gguf
+  BONSAI_PRISM_LIB_DIR   — directory containing llama-server and .so files
+  BONSAI_PROXY_LISTEN    — default 127.0.0.1:11434
+  BONSAI_OLLAMA_BACKEND  — default http://127.0.0.1:11435
+  BONSAI_LLAMA_PORT      — default 9988
+  OLLAMA_BIN             — path to ollama for backend (scripts only)
+
+Registry
+--------
+https://ollama.com/eslider/bonsai-1.7b
+
+Without the proxy, `ollama run` that model will keep failing until Ollama ships Q1_0
+support in its runner.
