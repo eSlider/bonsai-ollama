@@ -1,7 +1,7 @@
-// /usr/bin/env go run ./cmd/bench-llama-tokens
+///usr/bin/true; exec /usr/bin/env go run "$0" "$@"
 //
 // Measure Bonsai token timings via Prism llama-server OpenAI API (non-stream).
-// Built binary: ./bin/bench_llama-tokens (see bin/run.sh / bin/setup.sh).
+// Built binary: ./bin/bench_llama_tokens (see bin/run.sh / bin/setup.sh).
 package main
 
 import (

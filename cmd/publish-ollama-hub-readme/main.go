@@ -1,4 +1,4 @@
-// /usr/bin/env go run ./cmd/publish-ollama-hub-readme
+///usr/bin/true; exec /usr/bin/env go run "$0" "$@"
 //
 // Publish Ollama Hub summary (≤255 chars) and readme for eslider/bonsai-1.7b.
 // Built binary: ./bin/publish_ollama_hub_readme

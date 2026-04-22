@@ -1,4 +1,4 @@
-// /usr/bin/env go run ./cmd/verify-stream
+///usr/bin/true; exec /usr/bin/env go run "$0" "$@"
 //
 // Read Ollama NDJSON from stdin; check streaming is active and chunks arrive without long stalls.
 // Built binary: ./bin/verify_stream

@@ -289,7 +289,7 @@ Environment variables (optional). Full notes: [`models/bonsai-1.7b/OLLAMA.txt`](
 | [`models/bonsai-1.7b/README.md`](models/bonsai-1.7b/README.md) | Text for [Ollama Hub](https://ollama.com/eslider/bonsai-1.7b) (summary + readme) |
 | [`bin/publish_ollama_hub_readme`](bin/publish_ollama_hub_readme) | POST hub summary/readme (`OLLAMA_COM_COOKIE`) |
 
-CLI programs under `cmd/*/main.go` start with a **`///usr/bin/env go run ./cmd/…`** line comment (the common Go “shebang” hint). A real `#!` first line is **not** accepted by `go build` / `go vet`, so tools are shipped as **compiled binaries** in `bin/` (built by `./bin/setup.sh` and `./bin/run.sh`).
+CLI programs under `cmd/*/main.go` start with a **`///usr/bin/true; exec /usr/bin/env go run "$0" "$@"`** line comment (it is valid Go: `//` begins the line comment). A real **`#!`** shebang cannot be the first bytes of a `.go` file because **`go build` / `go vet` reject `#`**. Day-to-day use: **`./bin/<tool>`** (compiled by `./bin/setup.sh` / `./bin/run.sh`) or **`go run ./cmd/…`**. The `main.go` sources are stored as **executable (`100755`)** in git for environments that run them via a shell wrapper around that idiom.
 
 ---
 
