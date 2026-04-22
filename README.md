@@ -4,7 +4,7 @@
 [![License: MIT](https://img.shields.io/github/license/eSlider/bonsai-ollama)](LICENSE)
 [![Go](https://img.shields.io/badge/Go-1.22+-00ADD8?logo=go&logoColor=white)](https://go.dev/dl/)
 
-**Repository:** [github.com/eSlider/bonsai-ollama](https://github.com/eSlider/bonsai-ollama) · **Latest release:** [v0.1.0](https://github.com/eSlider/bonsai-ollama/releases/tag/v0.1.0)
+**Repository:** [github.com/eSlider/bonsai-ollama](https://github.com/eSlider/bonsai-ollama) · **Latest release:** [v0.1.1](https://github.com/eSlider/bonsai-ollama/releases/tag/v0.1.1)
 
 **Run [PrismML Bonsai 1.7B](https://huggingface.co/prism-ml/Bonsai-1.7B-gguf) (GGUF `Q1_0`) with the [Ollama](https://ollama.com) CLI and HTTP API** even though the stock Ollama engine cannot load this quantization yet. This repository ships a small **Go reverse proxy** that forwards Bonsai traffic to [PrismML’s `llama-server`](https://github.com/PrismML-Eng/llama.cpp/releases) and everything else to a normal `ollama serve`.
 
@@ -23,6 +23,7 @@
 - [Daily use](#daily-use)
 - [HTTP API examples](#http-api-examples)
 - [Streaming](#streaming)
+- [Performance (CPU benchmarks)](#performance-cpu-benchmarks)
 - [Configuration](#configuration)
 - [Troubleshooting](#troubleshooting)
 - [Repository layout](#repository-layout)
@@ -189,6 +190,40 @@ curl -sS -N -X POST http://127.0.0.1:11434/api/chat \
 
 ---
 
+## Performance (CPU benchmarks)
+
+Bonsai inference in this stack is executed by **Prism `llama-server`** (OpenAI-compatible `/v1/chat/completions`). The proxy’s job is routing and stream translation; end-to-end generation speed is dominated by **`llama-server` on your CPU** (or GPU build, if you use a Prism release with CUDA/Vulkan and set `BONSAI_PRISM_LIB_DIR` accordingly).
+
+The table below uses the server’s built-in **`timings`** object (tokens per second for the prompt and prediction phases), which matches how [`llama.cpp` server](https://github.com/ggerganov/llama.cpp) reports throughput.
+
+| Metric | Result |
+|--------|--------|
+| **Decode** (`max_tokens=256`, 5 runs, temperature 0.75) | **~66 tok/s** mean (σ ≈ 1.2; ~64–68 tok/s on this host) |
+| **Prefill** (~480-token article prompt, `max_tokens=8`, **3× warmup** on the same prompt then 5 measured runs) | **~51 tok/s** mean (σ ≈ 4.3) |
+
+**Measured environment (2026-04-22):**
+
+| | |
+|--|--|
+| **CPU** | AMD Ryzen 7 5800H (8 cores / 16 threads), x86_64 |
+| **OS** | Linux `7.0.0-070000rc7-generic` |
+| **GGUF** | `Bonsai-1.7B-Q1_0.gguf` ([HF](https://huggingface.co/prism-ml/Bonsai-1.7B-gguf)) |
+| **Binary** | Prism `llama-server` tarball **`llama-prism-b8846-d104cf1-bin-ubuntu-x64`** ([release](https://github.com/PrismML-Eng/llama.cpp/releases/download/prism-b8846-d104cf1/llama-prism-b8846-d104cf1-bin-ubuntu-x64.tar.gz)); API `system_fingerprint`: **`b8846-d104cf1b6`** |
+| **Endpoint** | `http://127.0.0.1:9988` (same process the proxy supervises) |
+
+Your numbers will differ with other CPUs, power/thermal limits, concurrent load, and thread / batch settings on `llama-server`.
+
+**Reproduce:**
+
+```bash
+./bin/run.sh   # wait until llama-server is listening on 9988
+python3 scripts/bench_llama_tokens.py --runs 5 --json
+```
+
+[`scripts/bench_llama_tokens.py`](scripts/bench_llama_tokens.py) prints a small JSON summary (mean / stdev / min / max). Point at another host or port with `BONSAI_LLAMA_URL=http://127.0.0.1:9988`.
+
+---
+
 ## Configuration
 
 Environment variables (optional). Full notes: [`models/bonsai-1.7b/OLLAMA.txt`](models/bonsai-1.7b/OLLAMA.txt).
@@ -224,6 +259,7 @@ Environment variables (optional). Full notes: [`models/bonsai-1.7b/OLLAMA.txt`](
 | [`cmd/bonsai-ollama-proxy/`](cmd/bonsai-ollama-proxy/) | Go source: proxy + `llama-server` supervisor |
 | [`scripts/bonsai-ollama-stack.sh`](scripts/bonsai-ollama-stack.sh) | Starts backend Ollama + proxy |
 | [`scripts/verify_stream.py`](scripts/verify_stream.py) | Quick streaming sanity check |
+| [`scripts/bench_llama_tokens.py`](scripts/bench_llama_tokens.py) | CPU token throughput (uses `llama-server` `timings`) |
 | [`bin/run.sh`](bin/run.sh) | Build-if-needed + exec stack |
 | [`models/bonsai-1.7b/Modelfile`](models/bonsai-1.7b/Modelfile) | `ollama create` recipe (weights not in git) |
 | [`models/bonsai-1.7b/OLLAMA.txt`](models/bonsai-1.7b/OLLAMA.txt) | Extra operational notes |
