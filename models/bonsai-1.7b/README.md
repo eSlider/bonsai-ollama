@@ -42,7 +42,7 @@ This GGUF uses GGML tensor type **`Q1_0`**, which the Ollama runner’s bundled 
    ollama run eslider/bonsai-1.7b "Say hello in one sentence."
    ```
 
-5. **Optional:** CPU throughput numbers and a small benchmark script live in the GitHub README under *Performance (CPU benchmarks)* (`scripts/bench_llama_tokens.py`).
+5. **Optional:** CPU throughput numbers and a small benchmark script live in the GitHub README under *Performance (CPU benchmarks)* (`bin/bench_llama_tokens.py`).
 
 ## What you get
 

@@ -10,7 +10,7 @@
 
 **Upstream weights & paper trail:** [Hugging Face — `prism-ml/Bonsai-1.7B-gguf`](https://huggingface.co/prism-ml/Bonsai-1.7B-gguf) (Apache-2.0) · [Bonsai-demo](https://github.com/PrismML-Eng/Bonsai-demo) · [Ollama import docs](https://docs.ollama.com/import)
 
-**Registry (same GGUF; still needs this proxy until Ollama supports `Q1_0`):** [ollama.com/eslider/bonsai-1.7b](https://ollama.com/eslider/bonsai-1.7b) — hub-facing copy lives in [`models/bonsai-1.7b/README.md`](models/bonsai-1.7b/README.md); maintainers can push summary + readme with [`scripts/publish_ollama_hub_readme.py`](scripts/publish_ollama_hub_readme.py) (needs `OLLAMA_COM_COOKIE` from a signed-in browser session).
+**Registry (same GGUF; still needs this proxy until Ollama supports `Q1_0`):** [ollama.com/eslider/bonsai-1.7b](https://ollama.com/eslider/bonsai-1.7b) — hub-facing copy lives in [`models/bonsai-1.7b/README.md`](models/bonsai-1.7b/README.md); maintainers can push summary + readme with [`bin/publish_ollama_hub_readme.py`](bin/publish_ollama_hub_readme.py) (needs `OLLAMA_COM_COOKIE` from a signed-in browser session).
 
 ---
 
@@ -105,7 +105,7 @@ ollama run eslider/bonsai-1.7b "Say hello in one sentence."
 | [Go](https://go.dev/dl/) **1.22+** | Build `bonsai-ollama-proxy` (`setup.sh` and `run.sh`) |
 | `curl`, `tar` | Used by `bin/setup.sh` |
 | [Ollama](https://ollama.com/download) | Backend on port `11435` (not installed by `setup.sh`) |
-| `fuser` (optional) | From [`psmisc`](https://gitlab.com/psmisc/psmisc) on Debian/Ubuntu — `scripts/bonsai-ollama-stack.sh` uses it to free ports |
+| `fuser` (optional) | From [`psmisc`](https://gitlab.com/psmisc/psmisc) on Debian/Ubuntu — `bin/bonsai-ollama-stack.sh` uses it to free ports |
 
 ### Manual setup (same as `./bin/setup.sh`)
 
@@ -150,7 +150,7 @@ Stop anything already bound to **11434**, **11435**, and **9988** (or let the sc
 ./bin/run.sh
 ```
 
-- Builds `bin/bonsai-ollama-proxy` if missing, then runs `scripts/bonsai-ollama-stack.sh`.
+- Builds `bin/bonsai-ollama-proxy` if missing, then runs `bin/bonsai-ollama-stack.sh`.
 - Backend logs: `/tmp/ollama-bonsai-backend.log`.
 
 ---
@@ -198,10 +198,10 @@ For each `data:` line from `llama-server`’s OpenAI SSE stream, the proxy emits
 curl -sS -N -X POST http://127.0.0.1:11434/api/chat \
   -H "Content-Type: application/json" \
   -d '{"model":"eslider/bonsai-1.7b","messages":[{"role":"user","content":"Count 1 2 3"}],"stream":true}' \
-| python3 scripts/verify_stream.py
+| python3 bin/verify_stream.py
 ```
 
-[`scripts/verify_stream.py`](scripts/verify_stream.py) checks that chunks arrive and that there are no multi-second stalls.
+[`bin/verify_stream.py`](bin/verify_stream.py) checks that chunks arrive and that there are no multi-second stalls.
 
 ---
 
@@ -233,10 +233,10 @@ Your numbers will differ with other CPUs, power/thermal limits, concurrent load,
 ```bash
 ./bin/setup.sh   # once per machine (GGUF + Prism + go build)
 ./bin/run.sh     # wait until llama-server answers on 9988
-python3 scripts/bench_llama_tokens.py --runs 5 --json
+python3 bin/bench_llama_tokens.py --runs 5 --json
 ```
 
-[`scripts/bench_llama_tokens.py`](scripts/bench_llama_tokens.py) prints a small JSON summary (mean / stdev / min / max). Point at another host or port with `BONSAI_LLAMA_URL=http://127.0.0.1:9988`.
+[`bin/bench_llama_tokens.py`](bin/bench_llama_tokens.py) prints a small JSON summary (mean / stdev / min / max). Point at another host or port with `BONSAI_LLAMA_URL=http://127.0.0.1:9988`.
 
 ---
 
@@ -273,15 +273,15 @@ Environment variables (optional). Full notes: [`models/bonsai-1.7b/OLLAMA.txt`](
 | Path | Purpose |
 |------|---------|
 | [`cmd/bonsai-ollama-proxy/`](cmd/bonsai-ollama-proxy/) | Go source: proxy + `llama-server` supervisor |
-| [`scripts/bonsai-ollama-stack.sh`](scripts/bonsai-ollama-stack.sh) | Starts backend Ollama + proxy |
-| [`scripts/verify_stream.py`](scripts/verify_stream.py) | Quick streaming sanity check |
-| [`scripts/bench_llama_tokens.py`](scripts/bench_llama_tokens.py) | CPU token throughput (uses `llama-server` `timings`) |
+| [`bin/bonsai-ollama-stack.sh`](bin/bonsai-ollama-stack.sh) | Starts backend Ollama + proxy |
+| [`bin/verify_stream.py`](bin/verify_stream.py) | Quick streaming sanity check |
+| [`bin/bench_llama_tokens.py`](bin/bench_llama_tokens.py) | CPU token throughput (uses `llama-server` `timings`) |
 | [`bin/setup.sh`](bin/setup.sh) | Full local setup: GGUF + Prism tarball + `go build` |
 | [`bin/run.sh`](bin/run.sh) | Build-if-needed + exec stack |
 | [`models/bonsai-1.7b/Modelfile`](models/bonsai-1.7b/Modelfile) | `ollama create` recipe (weights not in git) |
 | [`models/bonsai-1.7b/OLLAMA.txt`](models/bonsai-1.7b/OLLAMA.txt) | Extra operational notes |
 | [`models/bonsai-1.7b/README.md`](models/bonsai-1.7b/README.md) | Text for [Ollama Hub](https://ollama.com/eslider/bonsai-1.7b) (summary + readme) |
-| [`scripts/publish_ollama_hub_readme.py`](scripts/publish_ollama_hub_readme.py) | POST hub summary/readme (`OLLAMA_COM_COOKIE`) |
+| [`bin/publish_ollama_hub_readme.py`](bin/publish_ollama_hub_readme.py) | POST hub summary/readme (`OLLAMA_COM_COOKIE`) |
 
 ---
 

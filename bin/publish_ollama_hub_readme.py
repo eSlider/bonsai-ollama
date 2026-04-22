@@ -8,13 +8,13 @@ your logged-in **session cookie** — the local Ollama API key is not used here.
 
 Usage:
   export OLLAMA_COM_COOKIE='session=...; ...'   # copy from browser DevTools → Application → Cookies → ollama.com
-  python3 scripts/publish_ollama_hub_readme.py [--dry-run]
+  python3 bin/publish_ollama_hub_readme.py [--dry-run]
 
   # optional overrides:
   OLLAMA_HUB_MODEL=eslider/bonsai-1.7b \\
   OLLAMA_HUB_README=models/bonsai-1.7b/README.md \\
   OLLAMA_HUB_SUMMARY='One line under 255 chars' \\
-  python3 scripts/publish_ollama_hub_readme.py
+  python3 bin/publish_ollama_hub_readme.py
 """
 from __future__ import annotations
 

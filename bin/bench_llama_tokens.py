@@ -5,8 +5,8 @@ Reads JSON from llama-server /v1/chat/completions and aggregates timings.predict
 (decode) and timings.prompt_per_second (prefill). Target must be running (e.g. ./bin/run.sh).
 
 Usage:
-  python3 scripts/bench_llama_tokens.py
-  BONSAI_LLAMA_URL=http://127.0.0.1:9988 python3 scripts/bench_llama_tokens.py --json
+  python3 bin/bench_llama_tokens.py
+  BONSAI_LLAMA_URL=http://127.0.0.1:9988 python3 bin/bench_llama_tokens.py --json
 """
 from __future__ import annotations
 

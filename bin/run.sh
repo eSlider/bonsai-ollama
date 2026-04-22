@@ -9,4 +9,4 @@ if [[ ! -x "$PROXY" ]]; then
   (cd "$ROOT/cmd/bonsai-ollama-proxy" && go build -o "$PROXY" .)
 fi
 
-exec "$ROOT/scripts/bonsai-ollama-stack.sh"
+exec "$ROOT/bin/bonsai-ollama-stack.sh"

@@ -24,7 +24,7 @@ Build the proxy:
 
 Run the stack (stops listeners on 11434, 11435, 9988, then starts backend + proxy):
 
-  ./scripts/bonsai-ollama-stack.sh
+  ./bin/bonsai-ollama-stack.sh
 
 Then in another terminal (use a real TTY for `ollama run`):
 
@@ -45,7 +45,7 @@ Environment overrides (optional):
   BONSAI_PROXY_LISTEN    — default 127.0.0.1:11434
   BONSAI_OLLAMA_BACKEND  — default http://127.0.0.1:11435
   BONSAI_LLAMA_PORT      — default 9988
-  OLLAMA_BIN             — path to ollama for backend (scripts only)
+  OLLAMA_BIN             — path to ollama for backend (bonsai-ollama-stack.sh only)
 
 Registry
 --------
@@ -56,7 +56,7 @@ Publish it to ollama.com (requires your browser session cookie while signed in a
 model owner):
 
   export OLLAMA_COM_COOKIE='...'   # DevTools → Application → Cookies → ollama.com
-  python3 scripts/publish_ollama_hub_readme.py
+  python3 bin/publish_ollama_hub_readme.py
 
 Without the proxy, `ollama run` that model will keep failing until Ollama ships Q1_0
 support in its runner.
