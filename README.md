@@ -135,6 +135,8 @@ Other platforms (**CUDA**, **Vulkan**, **macOS**, etc.) are on the [PrismML-Eng/
 
 ### 3. Build the proxy
 
+Skip if you already ran `./bin/setup.sh` (it builds `bin/bonsai-ollama-proxy`).
+
 ```bash
 cd cmd/bonsai-ollama-proxy
 go build -o ../../bin/bonsai-ollama-proxy .
