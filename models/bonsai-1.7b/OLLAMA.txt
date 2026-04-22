@@ -51,5 +51,12 @@ Registry
 --------
 https://ollama.com/eslider/bonsai-1.7b
 
+Hub copy for the model card (summary + readme) lives in README.md next to this file.
+Publish it to ollama.com (requires your browser session cookie while signed in as the
+model owner):
+
+  export OLLAMA_COM_COOKIE='...'   # DevTools → Application → Cookies → ollama.com
+  python3 scripts/publish_ollama_hub_readme.py
+
 Without the proxy, `ollama run` that model will keep failing until Ollama ships Q1_0
 support in its runner.

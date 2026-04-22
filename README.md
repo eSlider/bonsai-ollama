@@ -10,7 +10,7 @@
 
 **Upstream weights & paper trail:** [Hugging Face — `prism-ml/Bonsai-1.7B-gguf`](https://huggingface.co/prism-ml/Bonsai-1.7B-gguf) (Apache-2.0) · [Bonsai-demo](https://github.com/PrismML-Eng/Bonsai-demo) · [Ollama import docs](https://docs.ollama.com/import)
 
-**Registry (same GGUF; still needs this proxy until Ollama supports `Q1_0`):** [ollama.com/eslider/bonsai-1.7b](https://ollama.com/eslider/bonsai-1.7b)
+**Registry (same GGUF; still needs this proxy until Ollama supports `Q1_0`):** [ollama.com/eslider/bonsai-1.7b](https://ollama.com/eslider/bonsai-1.7b) — hub-facing copy lives in [`models/bonsai-1.7b/README.md`](models/bonsai-1.7b/README.md); maintainers can push summary + readme with [`scripts/publish_ollama_hub_readme.py`](scripts/publish_ollama_hub_readme.py) (needs `OLLAMA_COM_COOKIE` from a signed-in browser session).
 
 ---
 
@@ -280,6 +280,8 @@ Environment variables (optional). Full notes: [`models/bonsai-1.7b/OLLAMA.txt`](
 | [`bin/run.sh`](bin/run.sh) | Build-if-needed + exec stack |
 | [`models/bonsai-1.7b/Modelfile`](models/bonsai-1.7b/Modelfile) | `ollama create` recipe (weights not in git) |
 | [`models/bonsai-1.7b/OLLAMA.txt`](models/bonsai-1.7b/OLLAMA.txt) | Extra operational notes |
+| [`models/bonsai-1.7b/README.md`](models/bonsai-1.7b/README.md) | Text for [Ollama Hub](https://ollama.com/eslider/bonsai-1.7b) (summary + readme) |
+| [`scripts/publish_ollama_hub_readme.py`](scripts/publish_ollama_hub_readme.py) | POST hub summary/readme (`OLLAMA_COM_COOKIE`) |
 
 ---
 
