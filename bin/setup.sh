@@ -1,10 +1,15 @@
 #!/usr/bin/env bash
-# One-shot setup from README: GGUF, Prism llama-server (Ubuntu x64), Go proxy binary.
+# One-shot setup from README: GGUF, Prism llama-server (Ubuntu x64), Go proxy + CLI tools.
 # Does not start services — use ./bin/run.sh after Ollama is installed.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
+
+if [[ ! -f "$ROOT/go.mod" ]]; then
+  echo "Missing $ROOT/go.mod — run ./bin/setup.sh from the bonsai-ollama checkout." >&2
+  exit 1
+fi
 
 # Pinned assets (keep in sync with README.md).
 GGUF_URL="${BONSAI_SETUP_GGUF_URL:-https://huggingface.co/prism-ml/Bonsai-1.7B-gguf/resolve/main/Bonsai-1.7B-Q1_0.gguf}"
@@ -28,7 +33,9 @@ while [[ $# -gt 0 ]]; do
 Usage: ./bin/setup.sh [--force]
 
   Downloads Bonsai GGUF and Prism llama-server (Ubuntu x64 CPU tarball),
-  extracts Prism under vendor/prism-llama/, and builds bin/bonsai-ollama-proxy.
+  extracts Prism under vendor/prism-llama/, and builds:
+    bin/bonsai-ollama-proxy, bin/bench_llama_tokens, bin/verify_stream,
+    bin/publish_ollama_hub_readme
 
   --force     Re-download GGUF / Prism archive and re-extract (removes existing
               GGUF file and Prism extract directory first).
@@ -109,5 +116,8 @@ mkdir -p "$ROOT/bin"
 echo "Setup complete." >&2
 echo "  GGUF:     $GGUF_PATH" >&2
 echo "  Prism:    $PRISM_DIR" >&2
-echo "  Proxy:    $PROXY_OUT" >&2
+echo "  Binaries: $PROXY_OUT" >&2
+echo "            $ROOT/bin/bench_llama_tokens" >&2
+echo "            $ROOT/bin/verify_stream" >&2
+echo "            $ROOT/bin/publish_ollama_hub_readme" >&2
 echo "Next: install Ollama if needed, then ./bin/run.sh" >&2

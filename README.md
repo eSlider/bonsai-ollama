@@ -153,7 +153,7 @@ Stop anything already bound to **11434**, **11435**, and **9988** (or let the sc
 ./bin/run.sh
 ```
 
-- Builds `bin/bonsai-ollama-proxy` if missing, then runs `bin/bonsai-ollama-stack.sh`.
+- Rebuilds `bin/bonsai-ollama-proxy` and the helper CLIs when missing or when any `cmd/*/…/*.go` is newer than the binary, then runs `bin/bonsai-ollama-stack.sh`.
 - Backend logs: `/tmp/ollama-bonsai-backend.log`.
 
 ---
@@ -283,7 +283,7 @@ Environment variables (optional). Full notes: [`models/bonsai-1.7b/OLLAMA.txt`](
 | [`bin/verify_stream`](bin/verify_stream) | Quick streaming sanity check (built Go binary) |
 | [`bin/bench_llama_tokens`](bin/bench_llama_tokens) | CPU token throughput (uses `llama-server` `timings`) |
 | [`bin/setup.sh`](bin/setup.sh) | Full local setup: GGUF + Prism tarball + `go build` |
-| [`bin/run.sh`](bin/run.sh) | Build-if-needed + exec stack |
+| [`bin/run.sh`](bin/run.sh) | Build when needed (stale `.go` detection) + exec stack |
 | [`models/bonsai-1.7b/Modelfile`](models/bonsai-1.7b/Modelfile) | `ollama create` recipe (weights not in git) |
 | [`models/bonsai-1.7b/OLLAMA.txt`](models/bonsai-1.7b/OLLAMA.txt) | Extra operational notes |
 | [`models/bonsai-1.7b/README.md`](models/bonsai-1.7b/README.md) | Text for [Ollama Hub](https://ollama.com/eslider/bonsai-1.7b) (summary + readme) |
