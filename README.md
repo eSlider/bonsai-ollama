@@ -1,7 +1,10 @@
 # bonsai-ollama
 
+[![CI](https://github.com/eSlider/bonsai-ollama/actions/workflows/ci.yml/badge.svg)](https://github.com/eSlider/bonsai-ollama/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/github/license/eSlider/bonsai-ollama)](LICENSE)
 [![Go](https://img.shields.io/badge/Go-1.22+-00ADD8?logo=go&logoColor=white)](https://go.dev/dl/)
+
+**Repository:** [github.com/eSlider/bonsai-ollama](https://github.com/eSlider/bonsai-ollama) · **Latest release:** [v0.1.0](https://github.com/eSlider/bonsai-ollama/releases/tag/v0.1.0)
 
 **Run [PrismML Bonsai 1.7B](https://huggingface.co/prism-ml/Bonsai-1.7B-gguf) (GGUF `Q1_0`) with the [Ollama](https://ollama.com) CLI and HTTP API** even though the stock Ollama engine cannot load this quantization yet. This repository ships a small **Go reverse proxy** that forwards Bonsai traffic to [PrismML’s `llama-server`](https://github.com/PrismML-Eng/llama.cpp/releases) and everything else to a normal `ollama serve`.
 
@@ -261,6 +264,8 @@ cd cmd/bonsai-ollama-proxy && go vet ./... && go test ./...
 ```
 
 (`go test` is a no-op until tests exist; `go vet` should be clean.)
+
+CI runs the same vet + build on every push to `main` (see [`.github/workflows/ci.yml`](.github/workflows/ci.yml)). If `git push` asks for credentials in a headless environment, run `gh auth setup-git` once (requires the [GitHub CLI](https://cli.github.com/) logged in).
 
 ---
 
