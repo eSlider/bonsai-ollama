@@ -18,9 +18,12 @@ This repo includes:
     streaming (`stream: true`): OpenAI SSE is translated to Ollama NDJSON.
   - All other requests go to a normal `ollama serve` on port 11435.
 
-Build the proxy:
+Build the proxy and tools (from repo root):
 
-  cd cmd/bonsai-ollama-proxy && go build -o ../../bin/bonsai-ollama-proxy .
+  go build -o bin/bonsai-ollama-proxy ./cmd/bonsai-ollama-proxy
+  go build -o bin/bench_llama_tokens ./cmd/bench-llama-tokens
+  go build -o bin/verify_stream ./cmd/verify-stream
+  go build -o bin/publish_ollama_hub_readme ./cmd/publish-ollama-hub-readme
 
 Run the stack (stops listeners on 11434, 11435, 9988, then starts backend + proxy):
 
@@ -56,7 +59,7 @@ Publish it to ollama.com (requires your browser session cookie while signed in a
 model owner):
 
   export OLLAMA_COM_COOKIE='...'   # DevTools → Application → Cookies → ollama.com
-  python3 bin/publish_ollama_hub_readme.py
+  ./bin/publish_ollama_hub_readme
 
 Without the proxy, `ollama run` that model will keep failing until Ollama ships Q1_0
 support in its runner.

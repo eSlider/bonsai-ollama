@@ -10,7 +10,7 @@
 
 **Upstream weights & paper trail:** [Hugging Face — `prism-ml/Bonsai-1.7B-gguf`](https://huggingface.co/prism-ml/Bonsai-1.7B-gguf) (Apache-2.0) · [Bonsai-demo](https://github.com/PrismML-Eng/Bonsai-demo) · [Ollama import docs](https://docs.ollama.com/import)
 
-**Registry (same GGUF; still needs this proxy until Ollama supports `Q1_0`):** [ollama.com/eslider/bonsai-1.7b](https://ollama.com/eslider/bonsai-1.7b) — hub-facing copy lives in [`models/bonsai-1.7b/README.md`](models/bonsai-1.7b/README.md); maintainers can push summary + readme with [`bin/publish_ollama_hub_readme.py`](bin/publish_ollama_hub_readme.py) (needs `OLLAMA_COM_COOKIE` from a signed-in browser session).
+**Registry (same GGUF; still needs this proxy until Ollama supports `Q1_0`):** [ollama.com/eslider/bonsai-1.7b](https://ollama.com/eslider/bonsai-1.7b) — hub-facing copy lives in [`models/bonsai-1.7b/README.md`](models/bonsai-1.7b/README.md); maintainers can push summary + readme with [`bin/publish_ollama_hub_readme`](bin/publish_ollama_hub_readme) (needs `OLLAMA_COM_COOKIE` from a signed-in browser session; build via `./bin/setup.sh` or `./bin/run.sh`).
 
 ---
 
@@ -138,8 +138,11 @@ Other platforms (**CUDA**, **Vulkan**, **macOS**, etc.) are on the [PrismML-Eng/
 Skip if you already ran `./bin/setup.sh` (it builds `bin/bonsai-ollama-proxy`).
 
 ```bash
-cd cmd/bonsai-ollama-proxy
-go build -o ../../bin/bonsai-ollama-proxy .
+cd /path/to/bonsai-ollama   # repository root (contains go.mod)
+go build -o bin/bonsai-ollama-proxy ./cmd/bonsai-ollama-proxy
+go build -o bin/bench_llama_tokens ./cmd/bench-llama-tokens
+go build -o bin/verify_stream ./cmd/verify-stream
+go build -o bin/publish_ollama_hub_readme ./cmd/publish-ollama-hub-readme
 ```
 
 ### 4. Run the stack
@@ -198,10 +201,10 @@ For each `data:` line from `llama-server`’s OpenAI SSE stream, the proxy emits
 curl -sS -N -X POST http://127.0.0.1:11434/api/chat \
   -H "Content-Type: application/json" \
   -d '{"model":"eslider/bonsai-1.7b","messages":[{"role":"user","content":"Count 1 2 3"}],"stream":true}' \
-| python3 bin/verify_stream.py
+| ./bin/verify_stream
 ```
 
-[`bin/verify_stream.py`](bin/verify_stream.py) checks that chunks arrive and that there are no multi-second stalls.
+[`bin/verify_stream`](bin/verify_stream) checks that chunks arrive and that there are no multi-second stalls (built from [`cmd/verify-stream`](cmd/verify-stream)).
 
 ---
 
@@ -233,10 +236,10 @@ Your numbers will differ with other CPUs, power/thermal limits, concurrent load,
 ```bash
 ./bin/setup.sh   # once per machine (GGUF + Prism + go build)
 ./bin/run.sh     # wait until llama-server answers on 9988
-python3 bin/bench_llama_tokens.py --runs 5 --json
+./bin/bench_llama_tokens --runs 5 --json
 ```
 
-[`bin/bench_llama_tokens.py`](bin/bench_llama_tokens.py) prints a small JSON summary (mean / stdev / min / max). Point at another host or port with `BONSAI_LLAMA_URL=http://127.0.0.1:9988`.
+[`bin/bench_llama_tokens`](bin/bench_llama_tokens) prints a small JSON summary (mean / stdev / min / max); sources in [`cmd/bench-llama-tokens`](cmd/bench-llama-tokens). Point at another host or port with `BONSAI_LLAMA_URL=http://127.0.0.1:9988`.
 
 ---
 
@@ -273,15 +276,20 @@ Environment variables (optional). Full notes: [`models/bonsai-1.7b/OLLAMA.txt`](
 | Path | Purpose |
 |------|---------|
 | [`cmd/bonsai-ollama-proxy/`](cmd/bonsai-ollama-proxy/) | Go source: proxy + `llama-server` supervisor |
+| [`cmd/bench-llama-tokens/`](cmd/bench-llama-tokens/) | `llama-server` token benchmark (`bin/bench_llama_tokens`) |
+| [`cmd/verify-stream/`](cmd/verify-stream/) | Streaming sanity reader (`bin/verify_stream`) |
+| [`cmd/publish-ollama-hub-readme/`](cmd/publish-ollama-hub-readme/) | Ollama Hub readme/summary publisher |
 | [`bin/bonsai-ollama-stack.sh`](bin/bonsai-ollama-stack.sh) | Starts backend Ollama + proxy |
-| [`bin/verify_stream.py`](bin/verify_stream.py) | Quick streaming sanity check |
-| [`bin/bench_llama_tokens.py`](bin/bench_llama_tokens.py) | CPU token throughput (uses `llama-server` `timings`) |
+| [`bin/verify_stream`](bin/verify_stream) | Quick streaming sanity check (built Go binary) |
+| [`bin/bench_llama_tokens`](bin/bench_llama_tokens) | CPU token throughput (uses `llama-server` `timings`) |
 | [`bin/setup.sh`](bin/setup.sh) | Full local setup: GGUF + Prism tarball + `go build` |
 | [`bin/run.sh`](bin/run.sh) | Build-if-needed + exec stack |
 | [`models/bonsai-1.7b/Modelfile`](models/bonsai-1.7b/Modelfile) | `ollama create` recipe (weights not in git) |
 | [`models/bonsai-1.7b/OLLAMA.txt`](models/bonsai-1.7b/OLLAMA.txt) | Extra operational notes |
 | [`models/bonsai-1.7b/README.md`](models/bonsai-1.7b/README.md) | Text for [Ollama Hub](https://ollama.com/eslider/bonsai-1.7b) (summary + readme) |
-| [`bin/publish_ollama_hub_readme.py`](bin/publish_ollama_hub_readme.py) | POST hub summary/readme (`OLLAMA_COM_COOKIE`) |
+| [`bin/publish_ollama_hub_readme`](bin/publish_ollama_hub_readme) | POST hub summary/readme (`OLLAMA_COM_COOKIE`) |
+
+CLI programs under `cmd/*/main.go` start with a **`///usr/bin/env go run ./cmd/…`** line comment (the common Go “shebang” hint). A real `#!` first line is **not** accepted by `go build` / `go vet`, so tools are shipped as **compiled binaries** in `bin/` (built by `./bin/setup.sh` and `./bin/run.sh`).
 
 ---
 
@@ -312,10 +320,10 @@ Then use OpenAI-compatible [`POST /v1/chat/completions`](https://platform.openai
 
 ## Contributing
 
-Issues and PRs are welcome. When changing the proxy, run:
+Issues and PRs are welcome. When changing Go code, from the **repository root** (where `go.mod` lives), run:
 
 ```bash
-cd cmd/bonsai-ollama-proxy && go vet ./... && go test ./...
+go vet ./... && go test ./...
 ```
 
 (`go test` is a no-op until tests exist; `go vet` should be clean.)

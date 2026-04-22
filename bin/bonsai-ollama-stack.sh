@@ -8,7 +8,7 @@ PROXY_BIN="${PROXY_BIN:-$ROOT/bin/bonsai-ollama-proxy}"
 BACKEND_PORT="${BACKEND_PORT:-11435}"
 
 if [[ ! -x "$PROXY_BIN" ]]; then
-  echo "Build the proxy first: (cd $ROOT/cmd/bonsai-ollama-proxy && go build -o $PROXY_BIN .)" >&2
+  echo "Build the proxy first: (cd $ROOT && go build -o $PROXY_BIN ./cmd/bonsai-ollama-proxy)" >&2
   exit 1
 fi
 

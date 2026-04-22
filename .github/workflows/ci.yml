@@ -12,9 +12,6 @@ permissions:
 jobs:
   go:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: cmd/bonsai-ollama-proxy
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
@@ -22,5 +19,10 @@ jobs:
           go-version: "1.22"
       - name: Vet
         run: go vet ./...
-      - name: Build
-        run: go build -o /tmp/bonsai-ollama-proxy .
+      - name: Build proxy
+        run: go build -o /tmp/bonsai-ollama-proxy ./cmd/bonsai-ollama-proxy
+      - name: Build tools
+        run: |
+          go build -o /tmp/bench-llama-tokens ./cmd/bench-llama-tokens
+          go build -o /tmp/verify-stream ./cmd/verify-stream
+          go build -o /tmp/publish-ollama-hub-readme ./cmd/publish-ollama-hub-readme

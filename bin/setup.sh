@@ -96,11 +96,14 @@ if [[ ! -x "$PRISM_DIR/llama-server" ]]; then
   exit 1
 fi
 
-echo "==> Build proxy -> $PROXY_OUT" >&2
+echo "==> Build Go tools -> $ROOT/bin" >&2
 mkdir -p "$ROOT/bin"
 (
-  cd "$ROOT/cmd/bonsai-ollama-proxy"
-  go build -o "$PROXY_OUT" .
+  cd "$ROOT"
+  go build -o "$PROXY_OUT" ./cmd/bonsai-ollama-proxy
+  go build -o "$ROOT/bin/bench_llama_tokens" ./cmd/bench-llama-tokens
+  go build -o "$ROOT/bin/verify_stream" ./cmd/verify-stream
+  go build -o "$ROOT/bin/publish_ollama_hub_readme" ./cmd/publish-ollama-hub-readme
 )
 
 echo "Setup complete." >&2

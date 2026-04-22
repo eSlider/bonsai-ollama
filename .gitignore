@@ -1,5 +1,8 @@
-# Built proxy (rebuild with: go build -o bin/bonsai-ollama-proxy ./cmd/bonsai-ollama-proxy)
+# Built binaries (rebuild: ./bin/setup.sh or ./bin/run.sh)
 bin/bonsai-ollama-proxy
+bin/bench_llama_tokens
+bin/verify_stream
+bin/publish_ollama_hub_readme
 
 # Local Ollama tarball experiments
 .ollama-upgrade/
