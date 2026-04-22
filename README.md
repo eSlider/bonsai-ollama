@@ -220,8 +220,8 @@ The table below uses the server’s built-in **`timings`** object (tokens per se
 
 | Metric | Result |
 |--------|--------|
-| **Decode** (`max_tokens=256`, 5 runs, temperature 0.75) | **~72 tok/s** mean (σ ≈ 1.5; ~70–74 tok/s on this host) |
-| **Prefill** (~480-token article prompt, `max_tokens=8`, **3× warmup** on the same prompt then 5 measured runs) | **~54 tok/s** mean (σ ≈ 4.7) |
+| **Decode** (`max_tokens=256`, 5 runs, temperature 0.75) | **~81 tok/s** mean (σ ≈ 1.5; ~70–74 tok/s on this host) |
+| **Prefill** (~480-token article prompt, `max_tokens=8`, **3× warmup** on the same prompt then 5 measured runs) | **~61 tok/s** mean (σ ≈ 4.7) |
 
 **Measured environment (2026-04-22, re-run after `bin/setup.sh` / proxy rebuild):**
 
