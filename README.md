@@ -4,7 +4,7 @@
 [![License: MIT](https://img.shields.io/github/license/eSlider/bonsai-ollama)](LICENSE)
 [![Go](https://img.shields.io/badge/Go-1.22+-00ADD8?logo=go&logoColor=white)](https://go.dev/dl/)
 
-**Repository:** [github.com/eSlider/bonsai-ollama](https://github.com/eSlider/bonsai-ollama) · **Latest release:** [v0.1.1](https://github.com/eSlider/bonsai-ollama/releases/tag/v0.1.1)
+**Repository:** [github.com/eSlider/bonsai-ollama](https://github.com/eSlider/bonsai-ollama) · **Latest release:** [v0.1.2](https://github.com/eSlider/bonsai-ollama/releases/tag/v0.1.2)
 
 **Run [PrismML Bonsai 1.7B](https://huggingface.co/prism-ml/Bonsai-1.7B-gguf) (GGUF `Q1_0`) with the [Ollama](https://ollama.com) CLI and HTTP API** even though the stock Ollama engine cannot load this quantization yet. This repository ships a small **Go reverse proxy** that forwards Bonsai traffic to [PrismML’s `llama-server`](https://github.com/PrismML-Eng/llama.cpp/releases) and everything else to a normal `ollama serve`.
 
@@ -75,10 +75,9 @@ flowchart LR
 git clone https://github.com/eSlider/bonsai-ollama.git
 cd bonsai-ollama
 
-# Download GGUF + Prism Ubuntu x64 binaries (see [Full setup](#full-setup))
-# …
+./bin/setup.sh   # GGUF + Prism llama-server + go build (see [Full setup](#full-setup))
 
-./bin/run.sh   # builds proxy if needed, frees 11434/11435/9988, starts stack
+./bin/run.sh     # frees 11434/11435/9988, starts backend Ollama + proxy
 
 export OLLAMA_HOST=http://127.0.0.1:11434
 ollama run eslider/bonsai-1.7b "Say hello in one sentence."
@@ -88,13 +87,27 @@ ollama run eslider/bonsai-1.7b "Say hello in one sentence."
 
 ## Full setup
 
+### One-command setup (recommended)
+
+```bash
+./bin/setup.sh
+```
+
+[`bin/setup.sh`](bin/setup.sh) performs the download / extract / build steps documented below: Hugging Face **GGUF**, pinned **Prism Ubuntu x64** `llama-server` tarball under `vendor/prism-llama/`, and `go build` → `bin/bonsai-ollama-proxy`. It does **not** install [Ollama](https://ollama.com/download) (install that separately), and it does **not** start daemons — use [`./bin/run.sh`](#4-run-the-stack) after setup.
+
+- **`./bin/setup.sh --force`** — re-download the GGUF, re-fetch the tarball, remove the old Prism extract, and rebuild.
+- **Overrides** — `BONSAI_SETUP_GGUF_URL`, `BONSAI_SETUP_PRISM_TAR_URL`, `BONSAI_SETUP_GGUF_PATH` (see `./bin/setup.sh --help`).
+
 ### Prerequisites
 
 | Requirement | Notes |
 |---------------|--------|
-| [Go](https://go.dev/dl/) **1.22+** | Build `bonsai-ollama-proxy` |
-| [Ollama](https://ollama.com/download) | Backend on port `11435` |
+| [Go](https://go.dev/dl/) **1.22+** | Build `bonsai-ollama-proxy` (`setup.sh` and `run.sh`) |
+| `curl`, `tar` | Used by `bin/setup.sh` |
+| [Ollama](https://ollama.com/download) | Backend on port `11435` (not installed by `setup.sh`) |
 | `fuser` (optional) | From [`psmisc`](https://gitlab.com/psmisc/psmisc) on Debian/Ubuntu — `scripts/bonsai-ollama-stack.sh` uses it to free ports |
+
+### Manual setup (same as `./bin/setup.sh`)
 
 ### 1. Download the GGUF (~237 MiB)
 
@@ -198,10 +211,10 @@ The table below uses the server’s built-in **`timings`** object (tokens per se
 
 | Metric | Result |
 |--------|--------|
-| **Decode** (`max_tokens=256`, 5 runs, temperature 0.75) | **~66 tok/s** mean (σ ≈ 1.2; ~64–68 tok/s on this host) |
-| **Prefill** (~480-token article prompt, `max_tokens=8`, **3× warmup** on the same prompt then 5 measured runs) | **~51 tok/s** mean (σ ≈ 4.3) |
+| **Decode** (`max_tokens=256`, 5 runs, temperature 0.75) | **~72 tok/s** mean (σ ≈ 1.5; ~70–74 tok/s on this host) |
+| **Prefill** (~480-token article prompt, `max_tokens=8`, **3× warmup** on the same prompt then 5 measured runs) | **~54 tok/s** mean (σ ≈ 4.7) |
 
-**Measured environment (2026-04-22):**
+**Measured environment (2026-04-22, re-run after `bin/setup.sh` / proxy rebuild):**
 
 | | |
 |--|--|
@@ -211,12 +224,13 @@ The table below uses the server’s built-in **`timings`** object (tokens per se
 | **Binary** | Prism `llama-server` tarball **`llama-prism-b8846-d104cf1-bin-ubuntu-x64`** ([release](https://github.com/PrismML-Eng/llama.cpp/releases/download/prism-b8846-d104cf1/llama-prism-b8846-d104cf1-bin-ubuntu-x64.tar.gz)); API `system_fingerprint`: **`b8846-d104cf1b6`** |
 | **Endpoint** | `http://127.0.0.1:9988` (same process the proxy supervises) |
 
-Your numbers will differ with other CPUs, power/thermal limits, concurrent load, and thread / batch settings on `llama-server`.
+Your numbers will differ with other CPUs, power/thermal limits, concurrent load, and thread / batch settings on `llama-server`. Throughput also drifts between runs on the same machine.
 
 **Reproduce:**
 
 ```bash
-./bin/run.sh   # wait until llama-server is listening on 9988
+./bin/setup.sh   # once per machine (GGUF + Prism + go build)
+./bin/run.sh     # wait until llama-server answers on 9988
 python3 scripts/bench_llama_tokens.py --runs 5 --json
 ```
 
@@ -246,7 +260,7 @@ Environment variables (optional). Full notes: [`models/bonsai-1.7b/OLLAMA.txt`](
 |---------|----------------|
 | **Address already in use** | Free `11434` / `11435` / `9988` or change ports via env vars. |
 | **`llama-server` not found** | `BONSAI_PRISM_LIB_DIR` must contain the extracted Prism binaries. |
-| **GGUF not found** | `BONSAI_GGUF` path; run the [download curl](#1-download-the-gguf-237-mib). |
+| **GGUF not found** | `BONSAI_GGUF` path; run `./bin/setup.sh` or the [manual GGUF download](#1-download-the-gguf-237-mib). |
 | **`ollama run` hangs in CI** | Use a real TTY or call `/api/chat` with `curl` / your HTTP client. |
 | **Stock Ollama still 500 on Bonsai** | You must talk to the **proxy** (`OLLAMA_HOST=…:11434`), not raw `:11435`. |
 
@@ -260,6 +274,7 @@ Environment variables (optional). Full notes: [`models/bonsai-1.7b/OLLAMA.txt`](
 | [`scripts/bonsai-ollama-stack.sh`](scripts/bonsai-ollama-stack.sh) | Starts backend Ollama + proxy |
 | [`scripts/verify_stream.py`](scripts/verify_stream.py) | Quick streaming sanity check |
 | [`scripts/bench_llama_tokens.py`](scripts/bench_llama_tokens.py) | CPU token throughput (uses `llama-server` `timings`) |
+| [`bin/setup.sh`](bin/setup.sh) | Full local setup: GGUF + Prism tarball + `go build` |
 | [`bin/run.sh`](bin/run.sh) | Build-if-needed + exec stack |
 | [`models/bonsai-1.7b/Modelfile`](models/bonsai-1.7b/Modelfile) | `ollama create` recipe (weights not in git) |
 | [`models/bonsai-1.7b/OLLAMA.txt`](models/bonsai-1.7b/OLLAMA.txt) | Extra operational notes |
