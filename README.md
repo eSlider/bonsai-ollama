@@ -4,7 +4,7 @@
 [![License: MIT](https://img.shields.io/github/license/eSlider/bonsai-ollama)](LICENSE)
 [![Go](https://img.shields.io/badge/Go-1.22+-00ADD8?logo=go&logoColor=white)](https://go.dev/dl/)
 
-**Repository:** [github.com/eSlider/bonsai-ollama](https://github.com/eSlider/bonsai-ollama) · **Latest release:** [v0.1.2](https://github.com/eSlider/bonsai-ollama/releases/tag/v0.1.2)
+**Repository:** [github.com/eSlider/bonsai-ollama](https://github.com/eSlider/bonsai-ollama) · **Releases:** [latest](https://github.com/eSlider/bonsai-ollama/releases/latest) · **Module:** `github.com/eSlider/bonsai-ollama` ([`go.mod`](go.mod) at repo root)
 
 **Run [PrismML Bonsai 1.7B](https://huggingface.co/prism-ml/Bonsai-1.7B-gguf) (GGUF `Q1_0`) with the [Ollama](https://ollama.com) CLI and HTTP API** even though the stock Ollama engine cannot load this quantization yet. This repository ships a small **Go reverse proxy** that forwards Bonsai traffic to [PrismML’s `llama-server`](https://github.com/PrismML-Eng/llama.cpp/releases) and everything else to a normal `ollama serve`.
 
@@ -27,6 +27,8 @@
 - [Configuration](#configuration)
 - [Troubleshooting](#troubleshooting)
 - [Repository layout](#repository-layout)
+- [Importing without the proxy (expect failure on `run`)](#importing-without-the-proxy-expect-failure-on-run)
+- [Optional: run Prism only](#optional-run-prism-only)
 - [Contributing](#contributing)
 - [License](#license)
 
@@ -57,7 +59,7 @@ flowchart LR
   end
   CLI --> R
   API --> R
-  R -->|"bonsai-1.7b chat/generate"| LS
+  R -->|"bonsai-1.7b / eslider/bonsai-1.7b chat/generate"| LS
   R -->|"everything else"| OS
 ```
 
@@ -93,7 +95,7 @@ ollama run eslider/bonsai-1.7b "Say hello in one sentence."
 ./bin/setup.sh
 ```
 
-[`bin/setup.sh`](bin/setup.sh) performs the download / extract / build steps documented below: Hugging Face **GGUF**, pinned **Prism Ubuntu x64** `llama-server` tarball under `vendor/prism-llama/`, and `go build` → `bin/bonsai-ollama-proxy`. It does **not** install [Ollama](https://ollama.com/download) (install that separately), and it does **not** start daemons — use [`./bin/run.sh`](#4-run-the-stack) after setup.
+[`bin/setup.sh`](bin/setup.sh) performs the download / extract / build steps documented below: Hugging Face **GGUF**, pinned **Prism Ubuntu x64** `llama-server` tarball under `vendor/prism-llama/`, and **`go build`** for **`bin/bonsai-ollama-proxy`** plus the helper CLIs **`bin/bench_llama_tokens`**, **`bin/verify_stream`**, and **`bin/publish_ollama_hub_readme`**. It does **not** install [Ollama](https://ollama.com/download) (install that separately), and it does **not** start daemons — use [`./bin/run.sh`](#4-run-the-stack) after setup.
 
 - **`./bin/setup.sh --force`** — re-download the GGUF, re-fetch the tarball, remove the old Prism extract, and rebuild.
 - **Overrides** — `BONSAI_SETUP_GGUF_URL`, `BONSAI_SETUP_PRISM_TAR_URL`, `BONSAI_SETUP_GGUF_PATH` (see `./bin/setup.sh --help`).
@@ -102,7 +104,7 @@ ollama run eslider/bonsai-1.7b "Say hello in one sentence."
 
 | Requirement | Notes |
 |---------------|--------|
-| [Go](https://go.dev/dl/) **1.22+** | Build `bonsai-ollama-proxy` (`setup.sh` and `run.sh`) |
+| [Go](https://go.dev/dl/) **1.22+** | Builds proxy + tools from repo-root [`go.mod`](go.mod) (`setup.sh` and `run.sh`) |
 | `curl`, `tar` | Used by `bin/setup.sh` |
 | [Ollama](https://ollama.com/download) | Backend on port `11435` (not installed by `setup.sh`) |
 | `fuser` (optional) | From [`psmisc`](https://gitlab.com/psmisc/psmisc) on Debian/Ubuntu — `bin/bonsai-ollama-stack.sh` uses it to free ports |
@@ -133,9 +135,9 @@ cd ../..
 
 Other platforms (**CUDA**, **Vulkan**, **macOS**, etc.) are on the [PrismML-Eng/llama.cpp releases](https://github.com/PrismML-Eng/llama.cpp/releases) page. Extract into `vendor/prism-llama/` and set `BONSAI_PRISM_LIB_DIR` to the folder that contains `llama-server` and its `.so` / `.dylib` files.
 
-### 3. Build the proxy
+### 3. Build Go binaries
 
-Skip if you already ran `./bin/setup.sh` (it builds `bin/bonsai-ollama-proxy`).
+Build the **proxy** and **CLI tools** into `bin/`. Skip if you already ran `./bin/setup.sh` (it runs the same `go build` lines).
 
 ```bash
 cd /path/to/bonsai-ollama   # repository root (contains go.mod)
@@ -204,7 +206,9 @@ curl -sS -N -X POST http://127.0.0.1:11434/api/chat \
 | ./bin/verify_stream
 ```
 
-[`bin/verify_stream`](bin/verify_stream) checks that chunks arrive and that there are no multi-second stalls (built from [`cmd/verify-stream`](cmd/verify-stream)).
+(`./bin/verify_stream` is produced by `./bin/setup.sh` or `./bin/run.sh`; otherwise run the `go build … ./cmd/verify-stream` line from [§3](#3-build-go-binaries).)
+
+[`bin/verify_stream`](bin/verify_stream) checks that chunks arrive and that there are no multi-second stalls (sources in [`cmd/verify-stream`](cmd/verify-stream)).
 
 ---
 
@@ -256,6 +260,8 @@ Environment variables (optional). Full notes: [`models/bonsai-1.7b/OLLAMA.txt`](
 | `BONSAI_OLLAMA_BACKEND` | `http://127.0.0.1:11435` | Upstream Ollama |
 | `BONSAI_LLAMA_PORT` | `9988` | `llama-server` port |
 | `OLLAMA_BIN` | `/usr/local/bin/ollama` | Used by `bonsai-ollama-stack.sh` only |
+| `BONSAI_LLAMA_URL` | `http://127.0.0.1:9988` | Default `--base` for [`bin/bench_llama_tokens`](cmd/bench-llama-tokens) (Prism `llama-server` HTTP, not Ollama) |
+| `OLLAMA_COM_COOKIE` | _(unset)_ | Browser session cookie for [`bin/publish_ollama_hub_readme`](cmd/publish-ollama-hub-readme) (see sources; `--dry-run` supported) |
 
 ---
 
@@ -268,6 +274,8 @@ Environment variables (optional). Full notes: [`models/bonsai-1.7b/OLLAMA.txt`](
 | **GGUF not found** | `BONSAI_GGUF` path; run `./bin/setup.sh` or the [manual GGUF download](#1-download-the-gguf-237-mib). |
 | **`ollama run` hangs in CI** | Use a real TTY or call `/api/chat` with `curl` / your HTTP client. |
 | **Stock Ollama still 500 on Bonsai** | You must talk to the **proxy** (`OLLAMA_HOST=…:11434`), not raw `:11435`. |
+| **`go: cannot find main module` / missing `go.mod`** | Run `go` / `./bin/run.sh` from the **repository root** (where [`go.mod`](go.mod) lives), not from `cmd/…`. |
+| **`./bin/verify_stream` or `./bin/bench_llama_tokens` not found** | Run `./bin/setup.sh` once, or `./bin/run.sh` (builds missing `bin/` tools), or build manually per [§3](#3-build-go-binaries). |
 
 ---
 
@@ -275,6 +283,7 @@ Environment variables (optional). Full notes: [`models/bonsai-1.7b/OLLAMA.txt`](
 
 | Path | Purpose |
 |------|---------|
+| [`go.mod`](go.mod) | Go module **`github.com/eSlider/bonsai-ollama`** (all `cmd/*` packages build from repo root) |
 | [`cmd/bonsai-ollama-proxy/`](cmd/bonsai-ollama-proxy/) | Go source: proxy + `llama-server` supervisor |
 | [`cmd/bench-llama-tokens/`](cmd/bench-llama-tokens/) | `llama-server` token benchmark (`bin/bench_llama_tokens`) |
 | [`cmd/verify-stream/`](cmd/verify-stream/) | Streaming sanity reader (`bin/verify_stream`) |
@@ -288,6 +297,8 @@ Environment variables (optional). Full notes: [`models/bonsai-1.7b/OLLAMA.txt`](
 | [`models/bonsai-1.7b/OLLAMA.txt`](models/bonsai-1.7b/OLLAMA.txt) | Extra operational notes |
 | [`models/bonsai-1.7b/README.md`](models/bonsai-1.7b/README.md) | Text for [Ollama Hub](https://ollama.com/eslider/bonsai-1.7b) (summary + readme) |
 | [`bin/publish_ollama_hub_readme`](bin/publish_ollama_hub_readme) | POST hub summary/readme (`OLLAMA_COM_COOKIE`) |
+| [`SECURITY.md`](SECURITY.md) | Security reporting |
+| [`.github/workflows/ci.yml`](.github/workflows/ci.yml) | CI: `go vet ./...`, build proxy + tools |
 
 CLI programs under `cmd/*/main.go` start with a **`///usr/bin/true; exec /usr/bin/env go run "$0" "$@"`** line comment (it is valid Go: `//` begins the line comment). A real **`#!`** shebang cannot be the first bytes of a `.go` file because **`go build` / `go vet` reject `#`**. Day-to-day use: **`./bin/<tool>`** (compiled by `./bin/setup.sh` / `./bin/run.sh`) or **`go run ./cmd/…`**. The `main.go` sources are stored as **executable (`100755`)** in git for environments that run them via a shell wrapper around that idiom.
 
@@ -330,11 +341,11 @@ go vet ./... && go test ./...
 
 The `cmd/bench-llama-tokens`, `cmd/verify-stream`, and `cmd/publish-ollama-hub-readme` `main.go` files use a **fixed first-line** `///usr/bin/true; …` comment idiom; **`gofmt` rewrites `///` to `// /`**, so do not run `gofmt` on those files unless you intend to change that convention.
 
-CI runs the same vet + build on every push to `main` (see [`.github/workflows/ci.yml`](.github/workflows/ci.yml)). If `git push` asks for credentials in a headless environment, run `gh auth setup-git` once (requires the [GitHub CLI](https://cli.github.com/) logged in).
+CI on every push to `main` runs **`go vet ./...`**, builds **`cmd/bonsai-ollama-proxy`**, and builds the three helper **`cmd/*`** tools (see [`.github/workflows/ci.yml`](.github/workflows/ci.yml)). If `git push` asks for credentials in a headless environment, run `gh auth setup-git` once (requires the [GitHub CLI](https://cli.github.com/) logged in).
 
 ---
 
 ## License
 
-- **This repository** (Go proxy, scripts, docs): [MIT](LICENSE).
+- **This repository** (Go proxy + `cmd/*` tools, `bin/*.sh`, docs): [MIT](LICENSE).
 - **Bonsai weights & Prism upstream**: [Apache-2.0](https://huggingface.co/prism-ml/Bonsai-1.7B-gguf) on Hugging Face; follow their attribution and license terms when redistributing GGUF files.
