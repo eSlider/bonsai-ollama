@@ -1,6 +1,6 @@
 # Security policy
 
-Please report security vulnerabilities for **this repository’s code** (the Go proxy and shell scripts) via [GitHub Security Advisories](https://docs.github.com/en/code-security/security-advisories/guidance-on-reporting-and-writing-information-about-vulnerabilities/privately-reporting-a-security-vulnerability) for this repository (use the **Security** tab → **Report a vulnerability**).
+Please report security vulnerabilities for **this repository’s code** (the Go proxy and shell scripts) via the [**Security** tab → **Report a vulnerability**](https://github.com/eSlider/bonsai-ollama/security/advisories/new) (private GitHub Security Advisory).
 
 Do **not** open public issues for undisclosed security problems.
 

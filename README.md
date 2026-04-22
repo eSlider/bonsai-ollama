@@ -1,6 +1,6 @@
 # bonsai-ollama
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![License: MIT](https://img.shields.io/github/license/eSlider/bonsai-ollama)](LICENSE)
 [![Go](https://img.shields.io/badge/Go-1.22+-00ADD8?logo=go&logoColor=white)](https://go.dev/dl/)
 
 **Run [PrismML Bonsai 1.7B](https://huggingface.co/prism-ml/Bonsai-1.7B-gguf) (GGUF `Q1_0`) with the [Ollama](https://ollama.com) CLI and HTTP API** even though the stock Ollama engine cannot load this quantization yet. This repository ships a small **Go reverse proxy** that forwards Bonsai traffic to [PrismML’s `llama-server`](https://github.com/PrismML-Eng/llama.cpp/releases) and everything else to a normal `ollama serve`.
