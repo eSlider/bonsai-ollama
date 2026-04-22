@@ -328,6 +328,8 @@ go vet ./... && go test ./...
 
 (`go test` is a no-op until tests exist; `go vet` should be clean.)
 
+The `cmd/bench-llama-tokens`, `cmd/verify-stream`, and `cmd/publish-ollama-hub-readme` `main.go` files use a **fixed first-line** `///usr/bin/true; …` comment idiom; **`gofmt` rewrites `///` to `// /`**, so do not run `gofmt` on those files unless you intend to change that convention.
+
 CI runs the same vet + build on every push to `main` (see [`.github/workflows/ci.yml`](.github/workflows/ci.yml)). If `git push` asks for credentials in a headless environment, run `gh auth setup-git` once (requires the [GitHub CLI](https://cli.github.com/) logged in).
 
 ---
